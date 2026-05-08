@@ -1,5 +1,3 @@
-const TOKEN_PATTERN = /(<\/?[A-Za-z][^>]*>|{[^{}]*(?:{[^{}]*}[^{}]*)*})/g;
-
 const ACCENT_MAP = new Map<string, string>([
   ["a", "aa"],
   ["b", "bb"],
@@ -56,18 +54,115 @@ const ACCENT_MAP = new Map<string, string>([
 ]);
 
 export function pseudoLocalizeMessage(message: string): string {
-  const parts = message.split(TOKEN_PATTERN).filter((part) => part !== "");
-  const pseudoMessage = parts
-    .map((part) => (isProtectedToken(part) ? part : pseudoLocalizeText(part)))
+  const pseudoMessage = tokenizeMessage(message)
+    .map((part) => (part.protected ? part.value : pseudoLocalizeText(part.value)))
     .join("");
 
   return `[${pseudoMessage}]`;
 }
 
-function isProtectedToken(part: string): boolean {
+interface MessageToken {
+  readonly value: string;
+  readonly protected: boolean;
+}
+
+function tokenizeMessage(message: string): MessageToken[] {
+  const tokens: MessageToken[] = [];
+  let index = 0;
+
+  while (index < message.length) {
+    const protectedToken =
+      readRichTextTagToken(message, index) ?? readBalancedBraceToken(message, index);
+
+    if (protectedToken) {
+      tokens.push({ value: protectedToken.value, protected: true });
+      index = protectedToken.endIndex;
+      continue;
+    }
+
+    const nextProtectedStart = findNextProtectedTokenStart(message, index + 1);
+    tokens.push({
+      value: message.slice(index, nextProtectedStart),
+      protected: false,
+    });
+    index = nextProtectedStart;
+  }
+
+  return tokens;
+}
+
+interface ProtectedToken {
+  readonly value: string;
+  readonly endIndex: number;
+}
+
+function readRichTextTagToken(message: string, startIndex: number): ProtectedToken | null {
+  if (message[startIndex] !== "<") {
+    return null;
+  }
+
+  const tagNameStart = message[startIndex + 1] === "/" ? startIndex + 2 : startIndex + 1;
+  if (!isAsciiLetter(message[tagNameStart])) {
+    return null;
+  }
+
+  const endIndex = message.indexOf(">", tagNameStart + 1);
+  if (endIndex === -1) {
+    return null;
+  }
+
+  return {
+    value: message.slice(startIndex, endIndex + 1),
+    endIndex: endIndex + 1,
+  };
+}
+
+function readBalancedBraceToken(message: string, startIndex: number): ProtectedToken | null {
+  if (message[startIndex] !== "{") {
+    return null;
+  }
+
+  let depth = 0;
+
+  for (let index = startIndex; index < message.length; index += 1) {
+    if (message[index] === "{") {
+      depth += 1;
+    }
+
+    if (message[index] === "}") {
+      depth -= 1;
+
+      if (depth === 0) {
+        return {
+          value: message.slice(startIndex, index + 1),
+          endIndex: index + 1,
+        };
+      }
+    }
+  }
+
+  return null;
+}
+
+function findNextProtectedTokenStart(message: string, startIndex: number): number {
+  for (let index = startIndex; index < message.length; index += 1) {
+    if (message[index] === "<" || message[index] === "{") {
+      return index;
+    }
+  }
+
+  return message.length;
+}
+
+function isAsciiLetter(character: string | undefined): boolean {
+  if (!character) {
+    return false;
+  }
+
+  const charCode = character.charCodeAt(0);
   return (
-    /^<\/?[A-Za-z][^>]*>$/.test(part) ||
-    (part.startsWith("{") && part.endsWith("}"))
+    (charCode >= "A".charCodeAt(0) && charCode <= "Z".charCodeAt(0)) ||
+    (charCode >= "a".charCodeAt(0) && charCode <= "z".charCodeAt(0))
   );
 }
 
