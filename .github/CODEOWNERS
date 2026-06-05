@@ -1,11 +1,11 @@
 # Default reviewers for everything
-*                                  @REPLACE_WITH_PLATFORM_TEAM
+*                                  @archan96
 
 # Specific paths (uncomment what applies)
-# /src/catalog.ts                      @REPLACE_WITH_PLATFORM_TEAM
-# /src/locales.ts                      @REPLACE_WITH_PLATFORM_TEAM
-# /src/negotiation.ts                  @REPLACE_WITH_SECURITY_TEAM
-# /src/format.ts                       @REPLACE_WITH_SECURITY_TEAM
-# /src/pseudo.ts                       @REPLACE_WITH_PLATFORM_TEAM
-# /.github/                            @REPLACE_WITH_PLATFORM_TEAM
-# /.github/workflows/                  @REPLACE_WITH_PLATFORM_TEAM
+# /src/catalog.ts                      @archan96
+# /src/locales.ts                      @archan96
+# /src/negotiation.ts                  @archan96
+# /src/format.ts                       @archan96
+# /src/pseudo.ts                       @archan96
+# /.github/                            @archan96
+# /.github/workflows/                  @archan96
