@@ -1,0 +1,11 @@
+# Default reviewers for everything
+*                                  @archan96
+
+# Specific paths (uncomment what applies)
+# /src/catalog.ts                      @archan96
+# /src/locales.ts                      @archan96
+# /src/negotiation.ts                  @archan96
+# /src/format.ts                       @archan96
+# /src/pseudo.ts                       @archan96
+# /.github/                            @archan96
+# /.github/workflows/                  @archan96
