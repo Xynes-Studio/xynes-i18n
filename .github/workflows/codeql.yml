@@ -2,41 +2,69 @@ name: CodeQL
 
 on:
   pull_request:
-    branches:
-      - main
-      - develop
-      - demo
+    branches: [main, develop, demo, "release/*"]
   push:
-    branches:
-      - main
-      - develop
-      - demo
+    branches: [main, develop, demo, "release/*"]
   schedule:
     - cron: "24 3 * * 1"
 
 permissions:
-  actions: read
   contents: read
-  security-events: write
 
 jobs:
   analyze:
     name: CodeQL analyze
     runs-on: ubuntu-latest
-    timeout-minutes: 10
-
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      actions: read
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
-
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v4
+        uses: github/codeql-action/init@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # verified upstream v4
         with:
           languages: javascript-typescript
           queries: security-extended,security-and-quality
+          build-mode: none
+      - name: Analyze
+        uses: github/codeql-action/analyze@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # verified upstream v4
+        with:
+          upload: false
+          output: codeql-results
+      - name: Preserve analysis evidence
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: codeql-${{ github.run_id }}-${{ github.run_attempt }}
+          path: codeql-results/*.sarif
+          if-no-files-found: error
+          retention-days: 7
 
-      - name: Autobuild
-        uses: github/codeql-action/autobuild@v4
-
-      - name: Perform CodeQL analysis
-        uses: github/codeql-action/analyze@v4
+  publish:
+    name: CodeQL publish
+    if: github.event_name == 'push' && github.ref_protected
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      actions: read
+      security-events: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # verified upstream v4
+        with:
+          languages: javascript-typescript
+          queries: security-extended,security-and-quality
+          build-mode: none
+      - name: Analyze
+        uses: github/codeql-action/analyze@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # verified upstream v4
+        with:
+          upload: true
+          output: codeql-results
