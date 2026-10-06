@@ -69,9 +69,23 @@ Validation detects missing/extra keys and ICU placeholder mismatches without eva
 ## Commands
 
 ```bash
-pnpm install
+pnpm install --frozen-lockfile
 pnpm test
 pnpm test:coverage
 pnpm lint
+pnpm typecheck
 pnpm build
 ```
+
+## Pull request checks
+
+Required checks are recorded in `.github/ci/required-checks.json`: lint, test,
+coverage, build, typecheck, security, and CodeQL analyze. Confirm that every
+required check has completed successfully on the current PR commit; an absent
+check is a validation gap.
+
+GitHub can disable scheduled workflows after repository inactivity. If CodeQL
+analyze is absent, check the existing CodeQL workflow's state in Actions and
+reactivate it when disabled for inactivity, then push the next reviewed change
+to trigger PR analysis. Keep the required check and the workflow's read-only PR
+permissions in place.
